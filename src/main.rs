@@ -28,10 +28,13 @@ fn main() {
 
         match huffman::count_frequencies(&cli.input) {
             Ok(freq) => {
-                println!("{:#?}", freq);
-                if let Some(root) = huffman::tree_build(freq) {
+                if let Some(root) = huffman::tree_build(&freq) {
                     let codes = huffman::gen_codes(&root);
-                    println!("{:#?}", codes);
+                    println!("Compressing File .....");
+                    match huffman::compress(&cli.input, &cli.output, &codes, &freq) {
+                        Ok(_) => println!("Done!! Saved To File : {:?}", cli.output),
+                        Err(e) => eprintln!("Error while creating a file : {}", e),
+                    }
                 } else {
                     println!("Empty File!!")
                 }
