@@ -42,7 +42,12 @@ fn main() {
             Err(e) => println!("Error While Reading the File : {:?}", e),
         }
     } else if cli.decompress {
-        println!("Decompressing {:?} to file {:?}", cli.input, cli.output)
+        println!("Decompressing {:?} to file {:?}", cli.input, cli.output);
+
+        match huffman::decompress(&cli.input, &cli.output) {
+            Ok(_) => println!("Successful Decompress to : {:?}", cli.output),
+            Err(e) => eprintln!("Error during decompression : {}", e),
+        }
     } else {
         println!("Please Specify either --compress or --decompress !!");
     }

@@ -200,3 +200,95 @@ pub fn compress(
 
     Ok(())
 }
+
+pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> io::Result<()> {
+    let input_file = File::open(input_path)?;
+    let mut reader = BufReader::new(input_file);
+
+    //header
+    // 1st 4 bytes === number of freq entries
+    let mut len_byt = [0u8; 4];
+    reader.read_exact(&mut len_byt)?;
+    let map_len = u32::from_le_bytes(len_byt);
+
+    let mut frequencies = HashMap::new();
+
+    //Construct frequencis HashMap
+    for _ in 0..map_len {
+        let mut byte_buf = [0u8; 1];
+        reader.read_exact(&mut byte_buf)?;
+        let byte = byte_buf[0];
+
+        let mut value_buf = [0u8; 8];
+        reader.read_exact(&mut value_buf)?;
+        let val = u64::from_le_bytes(value_buf) as usize;
+
+        frequencies.insert(byte, val);
+    }
+
+    //tree building
+    let root = tree_build(&frequencies).expect("Failed To Build Tree From header !!!!!");
+
+    //root singular node represent number of bytes in file
+    let total_bytes_file = root.freq;
+
+    let output_file = File::create(output_path)?;
+    let mut writer = BufWriter::new(output_file);
+
+    let mut current_node = &root;
+    let mut bytes_decoded = 0;
+    let mut buffer = [0; 8192];
+
+    //read file chunk ny chunk (8KB)
+    'outer: loop {
+        let bytes_read = reader.read(&mut buffer)?;
+        if bytes_read == 0 {
+            break;
+        }
+
+        for &byte in &buffer[..bytes_read] {
+            //read byte bit by bit
+            for i in (0..8).rev() {
+                let bit = (byte >> i) & 1;
+
+                if bit == 0 {
+                    match current_node.left {
+                        Some(ref left) => current_node = left,
+                        None => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "unexpected 0 bit in stream",
+                            ));
+                        }
+                    }
+                } else {
+                    match current_node.right {
+                        Some(ref right) => current_node = right,
+                        None => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "unexpected 1 bit in stream",
+                            ));
+                        }
+                    }
+                }
+
+                //hit a leaf
+                if let Some(decod_byt) = current_node.byte {
+                    writer.write_all(&[decod_byt])?;
+                    bytes_decoded += 1;
+
+                    //return to root after a byte is read
+                    current_node = &root;
+
+                    if bytes_decoded == total_bytes_file {
+                        break 'outer;
+                    }
+                }
+            }
+        }
+    }
+
+    writer.flush()?;
+    Ok(())
+}
