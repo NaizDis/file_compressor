@@ -29,7 +29,12 @@ fn main() {
         match huffman::count_frequencies(&cli.input) {
             Ok(freq) => {
                 println!("number of unique bytes : {:?}", freq.len());
-                println!("Frequencies : {:?}", freq);
+
+                if let Some(root) = huffman::tree_build(freq) {
+                    println!("Root Freq === Total Bytes in File == {:?}", root.freq)
+                } else {
+                    println!("Empty File!!")
+                }
             }
             Err(e) => println!("Error While Reading the File : {:?}", e),
         }
