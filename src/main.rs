@@ -28,10 +28,10 @@ fn main() {
 
         match huffman::count_frequencies(&cli.input) {
             Ok(freq) => {
-                println!("number of unique bytes : {:?}", freq.len());
-
+                println!("{:#?}", freq);
                 if let Some(root) = huffman::tree_build(freq) {
-                    println!("Root Freq === Total Bytes in File == {:?}", root.freq)
+                    let codes = huffman::gen_codes(&root);
+                    println!("{:#?}", codes);
                 } else {
                     println!("Empty File!!")
                 }

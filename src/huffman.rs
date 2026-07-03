@@ -1,9 +1,12 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::collections::HashMap;
+use std::env::current_dir;
 use std::fs::File;
 use std::io::{self, BufReader, Read};
 use std::path::PathBuf;
+
+use clap::builder::Str;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Node {
@@ -76,4 +79,30 @@ pub fn tree_build(frequencies: HashMap<u8, usize>) -> Option<Box<Node>> {
         heap.push(parent);
     }
     heap.pop().map(Box::new)
+}
+
+//recursive code genrator
+pub fn gen_codes(root: &Node) -> HashMap<u8, String> {
+    let mut codes = HashMap::new();
+    traversal(root, String::new(), &mut codes);
+    codes
+}
+
+fn traversal(node: &Node, curr_code: String, codes: &mut HashMap<u8, String>) {
+    //leaf nodes only hold the actual bytes rest are parent
+    if let Some(byte) = node.byte {
+        codes.insert(byte, curr_code);
+    } else {
+        //Parent Node Move on recursive
+        if let Some(ref left_c) = node.left {
+            let mut left_code = curr_code.clone();
+            left_code.push('0');
+            traversal(left_c, left_code, codes);
+        }
+        if let Some(ref right_c) = node.right {
+            let mut right_code = curr_code.clone();
+            right_code.push('1');
+            traversal(right_c, right_code, codes);
+        }
+    }
 }
