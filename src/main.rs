@@ -28,6 +28,7 @@ fn main() {
 
         match huffman::count_frequencies(&cli.input) {
             Ok(freq) => {
+                println!("{:?}", freq);
                 if let Some(root) = huffman::tree_build(&freq) {
                     let codes = huffman::gen_codes(&root);
                     println!("Compressing File .....");

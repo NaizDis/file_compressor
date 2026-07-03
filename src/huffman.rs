@@ -100,8 +100,10 @@ pub fn count_frequencies(input_path: &PathBuf) -> io::Result<HashMap<u8, usize>>
 
 pub fn tree_build(frequencies: &HashMap<u8, usize>) -> Option<Box<Node>> {
     let mut heap = BinaryHeap::new();
+    let mut entries: Vec<(u8, usize)> = frequencies.iter().map(|(&b, &f)| (b, f)).collect();
+    entries.sort_by_key(|&(b, _)| b);
 
-    for (&byte, &freq) in frequencies {
+    for (byte, freq) in entries {
         heap.push(Node {
             byte: Some(byte),
             freq,
@@ -225,6 +227,8 @@ pub fn decompress(input_path: &PathBuf, output_path: &PathBuf) -> io::Result<()>
 
         frequencies.insert(byte, val);
     }
+
+    println!("{:?}", frequencies);
 
     //tree building
     let root = tree_build(&frequencies).expect("Failed To Build Tree From header !!!!!");
