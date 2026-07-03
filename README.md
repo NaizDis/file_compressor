@@ -1,4 +1,4 @@
-# file_compressor
+# Huffman Coding file_compressor
 
 A Huffman coding file compressor written in Rust.
 
