@@ -23,8 +23,16 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
     if cli.compress {
-        println!("Compressing {:?} to file {:?}", cli.input, cli.output)
+        println!("Compressing {:?} to file {:?}", cli.input, cli.output);
         //Compressing
+
+        match huffman::count_frequencies(&cli.input) {
+            Ok(freq) => {
+                println!("number of unique bytes : {:?}", freq.len());
+                println!("Frequencies : {:?}", freq);
+            }
+            Err(e) => println!("Error While Reading the File : {:?}", e),
+        }
     } else if cli.decompress {
         println!("Decompressing {:?} to file {:?}", cli.input, cli.output)
     } else {
